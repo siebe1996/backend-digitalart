@@ -22,6 +22,7 @@ namespace DataAccessLayer.Extensions
             services.AddScoped<IArtpieceRepository, ArtpieceRepository>();
             services.AddScoped<ILikeRepository, LikeRepository>();
             services.AddScoped<IPlaceRepository, PlaceRepository>();
+            services.AddScoped<IProjectorRepository, ProjectorRepository>();
 
             //services.AddMvc().AddNewtonsoftJson();
 

@@ -46,5 +46,19 @@ namespace Backend_DigitalArt.Controllers
             var model = await _placeRepository.PostPlace(postPlaceModel);
             return CreatedAtAction("GetPlace", new { id = model.Id }, model);
         }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult<GetPlaceModel>> PutPlace([FromRoute] Guid id, [FromBody] PutPlaceModel putPlaceModel)
+        {
+            var model = await _placeRepository.PutPlace(id, putPlaceModel);
+            return model == null ? NotFound() : Ok(model);
+        }
+
+        [HttpPatch("{id}")]
+        public async Task<ActionResult<GetPlaceModel>> PatchPlace([FromRoute] Guid id, [FromBody] PatchPlaceModel patchPlaceModel)
+        {
+            var model = await _placeRepository.PatchPlace(id, patchPlaceModel);
+            return model == null ? NotFound() : Ok(model);
+        }
     }
 }

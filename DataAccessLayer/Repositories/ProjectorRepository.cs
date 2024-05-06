@@ -1,4 +1,5 @@
-﻿using Globals.Entities;
+﻿using DataAccessLayer.Repositories.Interfaces;
+using Globals.Entities;
 using Globals.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace DataAccessLayer.Repositories
 {
-    public class ProjectorRepository
+    public class ProjectorRepository : IProjectorRepository
     {
         private readonly Backend_DigitalArtContext _context;
         private readonly IHttpContextAccessor _httpContextAccessor;
@@ -85,6 +86,74 @@ namespace DataAccessLayer.Repositories
             };
 
             _context.Projectors.Add(projector);
+            await _context.SaveChangesAsync();
+
+            var getProjectorModel = new GetProjectorModel
+            {
+                Id = projector.Id,
+                ExpositionId = projector.ExpositionId,
+                Brand = projector.Brand,
+                Model = projector.Model,
+                SerialNumber = projector.SerialNumber,
+                Damages = projector.Damages,
+                Remarks = projector.Remarks,
+                Available = projector.Available,
+                CreatedAt = projector.CreatedAt,
+                UpdatedAt = projector.UpdatedAt,
+            };
+            return getProjectorModel;
+        }
+
+        public async Task<GetProjectorModel> PutProjector(Guid id, PutProjectorModel putProjectorModel)
+        {
+            var projector = await _context.Projectors.FindAsync(id);
+            if (projector == null)
+            {
+                throw new NotFoundException("Projector Not Found");
+            }
+
+            projector.Brand = putProjectorModel.Brand;
+            projector.Model = putProjectorModel.Model;
+            projector.SerialNumber = putProjectorModel.SerialNumber;
+            projector.Damages = putProjectorModel.Damages;
+            projector.Remarks = putProjectorModel.Remarks;
+
+            _context.Projectors.Update(projector);
+            await _context.SaveChangesAsync();
+
+            var getProjectorModel = new GetProjectorModel
+            {
+                Id = projector.Id,
+                ExpositionId = projector.ExpositionId,
+                Brand = projector.Brand,
+                Model = projector.Model,
+                SerialNumber = projector.SerialNumber,
+                Damages = projector.Damages,
+                Remarks = projector.Remarks,
+                Available = projector.Available,
+                CreatedAt = projector.CreatedAt,
+                UpdatedAt = projector.UpdatedAt,
+            };
+            return getProjectorModel;
+        }
+
+        public async Task<GetProjectorModel> PatchProjector(Guid id, PatchProjectorModel patchProjectorModel)
+        {
+            var projector = await _context.Projectors.FindAsync(id);
+            if (projector == null)
+            {
+                throw new NotFoundException("Projector Not Found");
+            }
+
+            projector.ExpositionId = patchProjectorModel.ExpositionId ?? projector.ExpositionId;
+            projector.Brand = patchProjectorModel.Brand ?? projector.Brand;
+            projector.Model = patchProjectorModel.Model ?? projector.Model;
+            projector.SerialNumber = patchProjectorModel.SerialNumber ?? projector.SerialNumber;
+            projector.Damages = patchProjectorModel.Damages ?? projector.Damages;
+            projector.Remarks = patchProjectorModel.Remarks ?? projector.Remarks;
+            projector.Available = patchProjectorModel.Available ?? projector.Available;
+
+            _context.Projectors.Update(projector);
             await _context.SaveChangesAsync();
 
             var getProjectorModel = new GetProjectorModel

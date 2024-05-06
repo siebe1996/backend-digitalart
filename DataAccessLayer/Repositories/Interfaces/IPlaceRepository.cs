@@ -13,5 +13,7 @@ namespace DataAccessLayer.Repositories.Interfaces
         Task<List<GetPlaceModel>> GetPlacesMine();
         Task<GetPlaceModel> GetPlace(Guid id);
         Task<GetPlaceModel> PostPlace(PostPlaceModel postPlaceModel);
+        Task<GetPlaceModel> PutPlace(Guid id, PutPlaceModel putPlaceModel);
+        Task<GetPlaceModel> PatchPlace(Guid id, PatchPlaceModel patchPlaceModel);
     }
 }

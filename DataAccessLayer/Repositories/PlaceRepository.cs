@@ -2,15 +2,20 @@
 using Globals.Entities;
 using Globals.Helpers;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Models.Places;
 using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace DataAccessLayer.Repositories
 {
@@ -122,6 +127,89 @@ namespace DataAccessLayer.Repositories
             };
 
             _context.Places.Add(place);
+            await _context.SaveChangesAsync();
+
+            var getPlaceModel = new GetPlaceModel
+            {
+                Id = place.Id,
+                Name = place.Name,
+                Description = place.Description,
+                Country = place.Country,
+                Province = place.Province,
+                City = place.City,
+                PostalCode = place.PostalCode,
+                Street = place.Street,
+                Address = place.Address,
+                Latitude = place.Coordinates.Y,
+                Longitude = place.Coordinates.X,
+                CreatedAt = place.CreatedAt,
+                UpdatedAt = place.UpdatedAt,
+            };
+            return getPlaceModel;
+        }
+
+        public async Task<GetPlaceModel> PutPlace(Guid id, PutPlaceModel putPlaceModel)
+        {
+            var place = await _context.Places.FindAsync(id);
+            if (place == null)
+            {
+                throw new NotFoundException("Place Not Found");
+            }
+
+            place.Name = putPlaceModel.Name;
+            place.Description = putPlaceModel.Description;
+            place.Country = putPlaceModel.Country;
+            place.Province = putPlaceModel.Province;
+            place.City = putPlaceModel.City;
+            place.PostalCode = putPlaceModel.PostalCode;
+            place.Street = putPlaceModel.Street;
+            place.Address = putPlaceModel.Address ;
+            place.Coordinates = new Point(putPlaceModel.Longitude, putPlaceModel.Latitude);
+
+            _context.Places.Update(place);
+            await _context.SaveChangesAsync();
+
+            var getPlaceModel = new GetPlaceModel
+            {
+                Id = place.Id,
+                Name = place.Name,
+                Description = place.Description,
+                Country = place.Country,
+                Province = place.Province,
+                City = place.City,
+                PostalCode = place.PostalCode,
+                Street = place.Street,
+                Address = place.Address,
+                Latitude = place.Coordinates.Y,
+                Longitude = place.Coordinates.X,
+                CreatedAt = place.CreatedAt,
+                UpdatedAt = place.UpdatedAt,
+            };
+            return getPlaceModel;
+        }
+
+        public async Task<GetPlaceModel> PatchPlace(Guid id, PatchPlaceModel patchPlaceModel)
+        {
+            var place = await _context.Places.FindAsync(id);
+            if (place == null)
+            {
+                throw new NotFoundException("Place Not Found");
+            }
+
+            place.Name = patchPlaceModel.Name ?? place.Name;
+            place.Description = patchPlaceModel.Description ?? place.Description;
+            place.Country = patchPlaceModel.Country ?? place.Country;
+            place.Province = patchPlaceModel.Province ?? place.Province;
+            place.City = patchPlaceModel.City ?? place.City;
+            place.PostalCode = patchPlaceModel.PostalCode ?? place.PostalCode;
+            place.Street = patchPlaceModel.Street ?? place.Street;
+            place.Address = patchPlaceModel.Address ?? place.Address;
+            if (patchPlaceModel.Latitude.HasValue && patchPlaceModel.Longitude.HasValue)
+            {
+                place.Coordinates = new Point(patchPlaceModel.Longitude.Value, patchPlaceModel.Latitude.Value);
+            }
+
+            _context.Places.Update(place);
             await _context.SaveChangesAsync();
 
             var getPlaceModel = new GetPlaceModel
