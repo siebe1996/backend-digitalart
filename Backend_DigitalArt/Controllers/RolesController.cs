@@ -18,11 +18,19 @@ namespace Backend_DigitalArt.Controllers
             _roleRepository = roleRepository;
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public async Task<ActionResult<GetRoleModel>> GetRoles()
         {
             var models = await _roleRepository.GetRoles();
             return models == null ? NotFound() : Ok(models);
+        }
+
+        [HttpGet("Exhibitor")]
+        public async Task<ActionResult<GetRoleModel>> GetRoleExhibitor()
+        {
+            var model = await _roleRepository.GetRoleExhibitor();
+            return model == null ? NotFound() : Ok(model);
         }
 
         [HttpGet("{id}")]

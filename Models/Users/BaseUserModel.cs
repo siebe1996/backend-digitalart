@@ -29,6 +29,10 @@ namespace Models.Users
 
         public string? Description { get; set; }
 
+        public byte[]? ImageData { get; set; }
+
+        public string? MimeTypeImageData { get; set; }
+
         /*[Required]
         [StringLength(50, MinimumLength = 2)]
         public string UserName { get; set; }*/
@@ -57,5 +61,8 @@ namespace Models.Users
 
         [Required]
         public string Address { get; set; }
+        
+        [Required]
+        public string Street { get; set; }
     }
 }

@@ -16,6 +16,9 @@ namespace Models.Artpieces
         public string Description { get; set; }
 
         [Required]
-        public string ImageData { get; set; }
+        public byte[] ImageData { get; set; }
+
+        [Required]
+        public string MimeTypeImageData { get; set; }
     }
 }

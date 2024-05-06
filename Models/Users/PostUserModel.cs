@@ -9,11 +9,11 @@ namespace Models.Users
 {
     public class PostUserModel : BaseUserModel
     {
-        public string? ImageData { get; set; }
+        //public string? ImageData { get; set; }
         [Required]
         public string Password { get; set; }
 
         [Required]
-        public int Role {  get; set; }
+        public Guid Role {  get; set; }
     }
 }

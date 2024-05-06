@@ -173,10 +173,12 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = user.DateOfBirth,
                 Email = user.Email,
                 ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
                 Country = user.Country,
                 Province = user.Province,
                 City = user.City,
                 PostalCode = user.PostalCode,
+                Street = user.Street,
                 Address = user.Address,
                 Description = artistDescription,
                 JwtToken = jwtToken,
@@ -228,6 +230,7 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = user.DateOfBirth,
                 Email = user.Email,
                 ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
                 //UserName = user.UserName,
                 //Score = user.Score,
                 //Gender = user.Gender,
@@ -236,6 +239,7 @@ namespace DataAccessLayer.Repositories
                 Province = user.Province,
                 City = user.City,
                 PostalCode = user.PostalCode,
+                Street = user.Street,
                 Address = user.Address,
                 JwtToken = jwtToken,
                 RefreshToken = newRefreshToken.Token,
@@ -279,6 +283,7 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = x.DateOfBirth,
                 Email = x.Email,
                 ImageData = x.ImageData,
+                MimeTypeImageData = x.MimeTypeImageData,
                 //UserName = x.UserName,
                 //Score = x.Score,
                 //Gender = x.Gender,
@@ -287,6 +292,7 @@ namespace DataAccessLayer.Repositories
                 Province = x.Province,
                 City = x.City,
                 PostalCode = x.PostalCode,
+                Street = x.Street,
                 Address = x.Address,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
@@ -307,11 +313,13 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = artist.DateOfBirth,
                 Email = artist.Email,
                 ImageData = artist.ImageData,
+                MimeTypeImageData = artist.MimeTypeImageData,
                 Description = artist.Description,
                 Country = artist.Country,
                 Province = artist.Province,
                 City = artist.City,
                 PostalCode = artist.PostalCode,
+                Street = artist.Street,
                 Address = artist.Address,
                 CreatedAt = artist.CreatedAt,
                 UpdatedAt = artist.UpdatedAt
@@ -332,6 +340,7 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = x.DateOfBirth,
                 Email = x.Email,
                 ImageData = x.ImageData,
+                MimeTypeImageData = x.MimeTypeImageData,
                 //UserName = x.UserName,
                 //Score = x.Score,
                 //Gender = x.Gender,
@@ -340,6 +349,7 @@ namespace DataAccessLayer.Repositories
                 Province = x.Province,
                 City = x.City,
                 PostalCode = x.PostalCode,
+                Street = x.Street,
                 Address = x.Address,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
@@ -369,6 +379,7 @@ namespace DataAccessLayer.Repositories
                 Province = x.Province,
                 City = x.City,
                 PostalCode = x.PostalCode,
+                Street = x.Street,
                 Address = x.Address,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt
@@ -394,69 +405,52 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetUserModel> PostUser(PostUserModel postUserModel, string ipAddress)
         {
-            User user = postUserModel.Role switch
+            //toDo make sure u cant add admin
+            var role = await _context.Roles.FindAsync(postUserModel.Role);
+            if (role == null)
             {
-                0 => new User(),
-                1 => new Artist { Description = postUserModel.Description },
-                2 => new Exhibitor(),
-                _ => throw new ArgumentException("Invalid user role"),
+                throw new ArgumentException($"Role with ID '{postUserModel.Role}' does not exist.");
+            }
+
+            User user = role.Name switch
+            {
+                "Artist" => new Artist { Description = postUserModel.Description },
+                "Exhibitor" => new Exhibitor(),
+                "User" => new User(),
+                _ => throw new ArgumentException("Provided role name does not match any known user type"),
             };
 
-            //byte[] imageData = HelperFunctions.ConvertBase64ToByteArray(postUserModel.ImageData).ToArray();
-            //var imageDate = 
             user.FirstName = postUserModel.FirstName;
             user.LastName = postUserModel.LastName;
             user.DateOfBirth = postUserModel.DateOfBirth;
             user.Email = postUserModel.Email;
-            Random random = new Random();
-            /*byte[] imageData = new byte[50444];
-            random.NextBytes(imageData);*/
-            //user.ImageData = postUserModel.ImageData;
-            user.ImageData = new byte[] { 1, 2, 3, 4 };
-            //user.ImageData = (byte[])imageData.Clone();
-            //user.ImageData = imageData;
+            user.ImageData = postUserModel.ImageData;
+            user.MimeTypeImageData = postUserModel.MimeTypeImageData;
             user.UserName = postUserModel.Email;
             user.Country = postUserModel.Country;
             user.Province = postUserModel.Province;
             user.City = postUserModel.City;
             user.PostalCode = postUserModel.PostalCode;
+            user.Street = postUserModel.Street;
             user.Address = postUserModel.Address;
-            user.CreatedAt = DateTime.UtcNow;
-            user.UpdatedAt = DateTime.UtcNow;
-
-            /*StringBuilder hex = new StringBuilder(imageData.Length * 2);
-            foreach (byte b in imageData)
-            {
-                hex.AppendFormat("{0:x2}", b);
-            }
-            string hexString = hex.ToString();*/
 
             var createResult = await _userManager.CreateAsync(user, postUserModel.Password);
             if (!createResult.Succeeded)
             {
-                // Handle failure: possibly throw an exception or return an error response
                 throw new Exception($"User creation failed: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
             }
 
-            string roleName = postUserModel.Role switch
-            {
-                0 => "User",
-                1 => "Artist",
-                2 => "Exhibitor",
-                _ => throw new ArgumentException("Invalid role"),
-            };
-
-            var roleResult = await _userManager.AddToRoleAsync(user, roleName);
+            var roleResult = await _userManager.AddToRoleAsync(user, role.Name);
             if (!roleResult.Succeeded)
             {
                 // Handle failure: possibly throw an exception or return an error response
-                throw new Exception($"Failed to add user to role {roleName}: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+                throw new Exception($"Failed to add user to role {role.Name}: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
             }
 
             
             await _context.SaveChangesAsync();
             Guid id = user.Id;
-            /*return new GetUserModel
+            return new GetUserModel
             {
                 Id = user.Id,
                 FirstName = user.FirstName,
@@ -464,36 +458,16 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = user.DateOfBirth,
                 Email = user.Email,
                 ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
                 Country = user.Country,
                 Province = user.Province,
                 City = user.City,
                 PostalCode = user.PostalCode,
+                Street = user.Street,
                 Address = user.Address,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
-            };*/
-            GetUserModel user2 = await _context.Users.Select(x => new GetUserModel
-            {
-                Id = x.Id,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                DateOfBirth = x.DateOfBirth,
-                Email = x.Email,
-                ImageData = x.ImageData,
-                //UserName = x.UserName,
-                //Score = x.Score,
-                //Gender = x.Gender,
-                //PhoneNumber = x.PhoneNumber,
-                Country = x.Country,
-                Province = x.Province,
-                City = x.City,
-                PostalCode = x.PostalCode,
-                Address = x.Address,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt
-            }).AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
-            return user2;
+            };
         }
 
 
@@ -519,10 +493,8 @@ namespace DataAccessLayer.Repositories
             if (putUserModel.ImageData != null)
             {
                 user.ImageData = putUserModel.ImageData;
+                user.MimeTypeImageData = putUserModel.MimeTypeImageData;
             }
-
-            user.UpdatedAt = DateTime.UtcNow;
-
 
             await _context.SaveChangesAsync();
 
@@ -534,6 +506,7 @@ namespace DataAccessLayer.Repositories
                 DateOfBirth = user.DateOfBirth,
                 Email = user.Email,
                 ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
                 //UserName = user.UserName,
                 //Score = user.Score,
                 //Gender = user.Gender,
@@ -542,6 +515,7 @@ namespace DataAccessLayer.Repositories
                 Province = user.Province,
                 City = user.City,
                 PostalCode = user.PostalCode,
+                Street = user.Street,
                 Address = user.Address,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt

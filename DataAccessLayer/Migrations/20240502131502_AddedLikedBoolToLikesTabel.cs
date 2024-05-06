@@ -5,24 +5,25 @@
 namespace DataAccessLayer.Migrations
 {
     /// <inheritdoc />
-    public partial class addedDescriptionToArtist : Migration
+    public partial class AddedLikedBoolToLikesTabel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<string>(
-                name: "Description",
-                table: "Artists",
-                type: "longtext",
-                nullable: false);
+            migrationBuilder.AddColumn<bool>(
+                name: "Liked",
+                table: "Likes",
+                type: "tinyint(1)",
+                nullable: false,
+                defaultValue: false);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Description",
-                table: "Artists");
+                name: "Liked",
+                table: "Likes");
         }
     }
 }

@@ -11,5 +11,7 @@ namespace Models.Users
         /*public string? UserName { get; set; }*/
         public DateTime? DateOfBirth { get; set; }
         public byte[]? ImageData { get; set; }
+
+        public string? MimeTypeImageData { get; set; }
     }
 }

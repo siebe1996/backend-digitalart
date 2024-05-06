@@ -30,11 +30,33 @@ namespace DataAccessLayer.Repositories
 
         public async Task<List<GetRoleModel>> GetRoles()
         {
+            List<GetRoleModel> roles = await _context.Roles
+                .Where(x => x.Name != "Admin") // Exclude the "Admin" role
+                .Select(x => new GetRoleModel
+                {
+                    Id = x.Id,
+                    Description = x.Description,
+                    Name = x.Name,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                })
+                .AsNoTracking()
+                .ToListAsync();
+
+            return roles;
+        }
+
+
+        public async Task<List<GetRoleModel>> GetAllRoles()
+        {
+            //toDo make change so only user with admin privilidge can get
             List<GetRoleModel> roles = await _context.Roles.Select(x => new GetRoleModel
             {
                 Id = x.Id,
                 Description = x.Description,
-                Name = x.Name
+                Name = x.Name,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
             }).AsNoTracking()
             .ToListAsync();
 
@@ -47,9 +69,27 @@ namespace DataAccessLayer.Repositories
             {
                 Id = x.Id,
                 Description = x.Description,
-                Name = x.Name
+                Name = x.Name,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
             }).AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
+
+            return role;
+        }
+
+        public async Task<GetRoleModel> GetRoleExhibitor()
+        {
+            GetRoleModel role = await _context.Roles
+                .Select(x => new GetRoleModel
+            {
+                Id = x.Id,
+                Description = x.Description,
+                Name = x.Name,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt
+            }).AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Name == "Exhibitor");
 
             return role;
         }
@@ -69,6 +109,8 @@ namespace DataAccessLayer.Repositories
                 Id = role.Id,
                 Name = postRoleModel.Name,
                 Description = role.Description,
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now,
             };
 
             return roleModel;

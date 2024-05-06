@@ -56,7 +56,10 @@ namespace DataAccessLayer
                 new Category { Name = "Sculpture", Description = "Three-dimensional art created by shaping or combining materials.", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow},
                 new Category { Name = "Photography", Description = "Art of capturing light with a camera, typically via a digital sensor or film.", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow},
                 new Category { Name = "Digital Art", Description = "Artistic work or practice that uses digital technology as part of the creative or presentation process.", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow},
-                new Category { Name = "Mixed Media", Description = "Artworks composed from a combination of different media or materials.", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow}
+                new Category { Name = "Mixed Media", Description = "Artworks composed from a combination of different media or materials.", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow},
+                new Category { Name = "Category 1", Description = "Description for Category 1", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow},
+                new Category { Name = "Category 2", Description = "Description for Category 2", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow},
+                new Category { Name = "Category 3", Description = "Description for Category 3", CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow}
             };
 
             foreach (var category in categories)

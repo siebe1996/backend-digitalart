@@ -1,4 +1,5 @@
-﻿using Globals.Enums;
+﻿using Globals.Entities.Interfaces;
+using Globals.Enums;
 using Microsoft.AspNetCore.Identity;
 using System;
 using System.Collections.Generic;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Globals.Entities
 {
-    public class User : IdentityUser<Guid>
+    public class User : IdentityUser<Guid>, ITrackable
     {
         [Required]
         [StringLength(50, MinimumLength = 2)]
@@ -39,7 +40,13 @@ namespace Globals.Entities
         [Required]
         public string Address { get; set; }
 
+        [Required]
+        public string Street { get; set; }
+
+        [MaxLength]
         public byte[]? ImageData { get; set; }
+
+        public string? MimeTypeImageData { get; set; }
 
         [Required]
         [DataType(DataType.DateTime)]

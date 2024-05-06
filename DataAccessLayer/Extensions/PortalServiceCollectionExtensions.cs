@@ -18,13 +18,10 @@ namespace DataAccessLayer.Extensions
             services.AddScoped<IRoleRepository, RoleRepository>();
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserRoleRepository, UserRoleRepository>();
-            /*services.AddScoped<IAssessmentRepository, AssessmentRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IArtpieceRepository, ArtpieceRepository>();
+            services.AddScoped<ILikeRepository, LikeRepository>();
             services.AddScoped<IPlaceRepository, PlaceRepository>();
-            services.AddScoped<IReviewRepository, ReviewRepository>();
-            services.AddScoped<INoteRepository, NoteRepository>();
-            services.AddScoped<IPossibleDateRepository, PossibleDateRepository>();
-            services.AddScoped<ICoordinateRepository, CoordinateRepository>();
-            services.AddScoped<IPaymentIntentRepository, PaymentIntentRepository>();*/
 
             //services.AddMvc().AddNewtonsoftJson();
 

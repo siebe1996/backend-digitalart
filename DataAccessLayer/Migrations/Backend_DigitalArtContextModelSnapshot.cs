@@ -3,7 +3,9 @@ using System;
 using DataAccessLayer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 
 #nullable disable
 
@@ -22,6 +24,8 @@ namespace DataAccessLayer.Migrations
                 .HasAnnotation("Proxies:LazyLoading", true)
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
+
             modelBuilder.Entity("Globals.Entities.Artpiece", b =>
                 {
                     b.Property<Guid>("Id")
@@ -38,7 +42,11 @@ namespace DataAccessLayer.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<string>("ImageData")
+                    b.Property<byte[]>("ImageData")
+                        .IsRequired()
+                        .HasColumnType("longblob");
+
+                    b.Property<string>("MimeTypeImageData")
                         .IsRequired()
                         .HasColumnType("longtext");
 
@@ -96,6 +104,21 @@ namespace DataAccessLayer.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("Globals.Entities.ExhibitorPlace", b =>
+                {
+                    b.Property<Guid>("ExhibitorId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("PlaceId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("ExhibitorId", "PlaceId");
+
+                    b.HasIndex("PlaceId");
+
+                    b.ToTable("ExhibitorPlaces");
+                });
+
             modelBuilder.Entity("Globals.Entities.Exposition", b =>
                 {
                     b.Property<Guid>("Id")
@@ -136,6 +159,15 @@ namespace DataAccessLayer.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("char(36)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<bool>("Liked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.HasKey("ArtpieceId", "UserId");
 
                     b.HasIndex("UserId");
@@ -149,8 +181,44 @@ namespace DataAccessLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<Point>("Coordinates")
+                        .IsRequired()
+                        .HasColumnType("point");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("PostalCode")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Province")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -258,6 +326,9 @@ namespace DataAccessLayer.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("longtext");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -270,6 +341,9 @@ namespace DataAccessLayer.Migrations
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
 
@@ -335,7 +409,10 @@ namespace DataAccessLayer.Migrations
                         .HasColumnType("tinyint(1)");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("MimeTypeImageData")
+                        .HasColumnType("longtext");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -363,6 +440,10 @@ namespace DataAccessLayer.Migrations
                         .HasColumnType("longtext");
 
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Street")
+                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -413,6 +494,8 @@ namespace DataAccessLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<string>("ClaimType")
                         .HasColumnType("longtext");
 
@@ -434,6 +517,8 @@ namespace DataAccessLayer.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
                         .HasColumnType("longtext");
@@ -506,12 +591,6 @@ namespace DataAccessLayer.Migrations
                 {
                     b.HasBaseType("Globals.Entities.User");
 
-                    b.Property<Guid?>("PlaceId")
-                        .IsRequired()
-                        .HasColumnType("char(36)");
-
-                    b.HasIndex("PlaceId");
-
                     b.ToTable("Exhibitors");
                 });
 
@@ -543,6 +622,25 @@ namespace DataAccessLayer.Migrations
                     b.Navigation("Artpiece");
 
                     b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("Globals.Entities.ExhibitorPlace", b =>
+                {
+                    b.HasOne("Globals.Entities.Exhibitor", "Exhibitor")
+                        .WithMany("ExhibitorPlaces")
+                        .HasForeignKey("ExhibitorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Globals.Entities.Place", "Place")
+                        .WithMany("ExhibitorPlaces")
+                        .HasForeignKey("PlaceId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exhibitor");
+
+                    b.Navigation("Place");
                 });
 
             modelBuilder.Entity("Globals.Entities.ExpositionArtpiece", b =>
@@ -695,14 +793,6 @@ namespace DataAccessLayer.Migrations
                         .HasForeignKey("Globals.Entities.Exhibitor", "Id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("Globals.Entities.Place", "Place")
-                        .WithMany("Exhibitors")
-                        .HasForeignKey("PlaceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Place");
                 });
 
             modelBuilder.Entity("Globals.Entities.Artpiece", b =>
@@ -728,7 +818,7 @@ namespace DataAccessLayer.Migrations
 
             modelBuilder.Entity("Globals.Entities.Place", b =>
                 {
-                    b.Navigation("Exhibitors");
+                    b.Navigation("ExhibitorPlaces");
 
                     b.Navigation("RentalAgreements");
                 });
@@ -761,6 +851,11 @@ namespace DataAccessLayer.Migrations
             modelBuilder.Entity("Globals.Entities.Artist", b =>
                 {
                     b.Navigation("Artpieces");
+                });
+
+            modelBuilder.Entity("Globals.Entities.Exhibitor", b =>
+                {
+                    b.Navigation("ExhibitorPlaces");
                 });
 #pragma warning restore 612, 618
         }

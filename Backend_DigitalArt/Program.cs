@@ -28,7 +28,10 @@ namespace Backend_DigitalArt
                 builder.AddDebug();
             });
             //builder.Services.AddDbContext<Backend_DigitalArtContext>(options => options.UseLazyLoadingProxies().UseSqlServer(builder.Configuration.GetConnectionString("Backend_DigitalArtContext")));
-            builder.Services.AddDbContext<Backend_DigitalArtContext>(options => options.UseLazyLoadingProxies().UseMySQL(builder.Configuration.GetConnectionString("Backend_DigitalArtContext")).EnableSensitiveDataLogging());
+            //builder.Services.AddDbContext<Backend_DigitalArtContext>(options => options.UseLazyLoadingProxies().UseMySQL(builder.Configuration.GetConnectionString("Backend_DigitalArtContext")).EnableSensitiveDataLogging());
+            MySqlServerVersion serverVersion = new MySqlServerVersion(new Version(8, 0, 36));
+            //builder.Services.AddDbContext<Backend_DigitalArtContext>(options => options.UseLazyLoadingProxies().UseMySql(builder.Configuration.GetConnectionString("Backend_DigitalArtContext"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("Backend_DigitalArtContext"))));
+            builder.Services.AddDbContext<Backend_DigitalArtContext>(options => options.UseLazyLoadingProxies().UseMySql(builder.Configuration.GetConnectionString("Backend_DigitalArtContext"), ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("Backend_DigitalArtContext")), mySqlOptions => mySqlOptions.UseNetTopologySuite()));
             builder.Services.AddIdentity<User, Role>().AddEntityFrameworkStores<Backend_DigitalArtContext>();// .AddDefaultTokenProviders().AddTokenProvider<EmailTokenProvider<User>>("email"); this is needed for reset password
             builder.Services.AddPortalServices(builder.Configuration);
 

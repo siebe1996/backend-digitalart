@@ -14,7 +14,7 @@ namespace Models.Users
 
         public List<string> Roles { get; set; }
 
-        public byte[]? ImageData { get; set; }
+        //public byte[]? ImageData { get; set; }
 
         /*[Required]
         public double Score { get; set; }*/

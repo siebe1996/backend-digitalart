@@ -36,6 +36,8 @@ namespace Models.Users
 
         public byte[]? ImageData { get; set; }
 
+        public string? MimeTypeImageData { get; set; }
+
         [Required]
         public DateTime DateOfBirth { get; set; }
 
@@ -64,6 +66,9 @@ namespace Models.Users
 
         [Required]
         public string Province { get; set; }
+
+        [Required]
+        public string Street { get; set; }
 
         [Required]
         public string Address { get; set; }

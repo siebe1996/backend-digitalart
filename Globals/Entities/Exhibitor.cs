@@ -11,8 +11,6 @@ namespace Globals.Entities
     [Table("Exhibitors")]
     public class Exhibitor : User
     {
-        public Guid? PlaceId { get; set; }
-
-        public virtual Place Place { get; set; }
+        public virtual ICollection<ExhibitorPlace> ExhibitorPlaces { get; set; }
     }
 }

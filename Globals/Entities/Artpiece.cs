@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Globals.Entities.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Globals.Entities
 {
-    public class Artpiece
+    public class Artpiece : ITrackable
     {
         [Required]
         public Guid Id { get; set; }
@@ -22,7 +23,10 @@ namespace Globals.Entities
         public string Description { get; set; }
 
         [Required]
-        public string ImageData { get; set; }
+        public byte[] ImageData { get; set; }
+
+        [Required]
+        public string MimeTypeImageData { get; set; }
 
         [Required]
         public DateTime CreatedAt { get; set; }

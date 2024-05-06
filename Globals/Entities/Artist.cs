@@ -11,6 +11,8 @@ namespace Globals.Entities
     [Table("Artists")]
     public class Artist : User
     {
+        //toDo make field artist name
+
         [Required]
         public string Description { get; set; }
 
