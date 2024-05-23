@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.Categories;
-using Models.Roles;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Backend_DigitalArt.Controllers
 {
@@ -20,25 +21,18 @@ namespace Backend_DigitalArt.Controllers
             _categoryRepository = categoryRepository;
         }
 
+        /// <summary>
+        /// Gets a list of categories.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 119ms
+        /// </remarks>
+        /// <returns>A list of categories.</returns>
         [HttpGet]
-        public async Task<ActionResult<GetCategoryModel>> GetCategories()
+        public async Task<ActionResult<List<GetCategoryModel>>> GetCategories()
         {
             var models = await _categoryRepository.GetCategories();
             return models == null ? NotFound() : Ok(models);
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<GetCategoryModel>> GetCategory(Guid Id)
-        {
-            var model = await _categoryRepository.GetCategory(Id);
-            return model == null ? NotFound() : Ok(model);
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<GetCategoryModel>> PostCategory(PostCategoryModel postCategoryModel)
-        {
-            var model = await _categoryRepository.PostCategory(postCategoryModel);
-            return CreatedAtAction("GetCategory", new { id = model.Id }, model);
         }
     }
 }

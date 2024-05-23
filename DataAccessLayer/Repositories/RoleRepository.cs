@@ -1,5 +1,6 @@
 ﻿using DataAccessLayer.Repositories.Interfaces;
 using Globals.Entities;
+using Globals.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,6 @@ namespace DataAccessLayer.Repositories
 
         public async Task<List<GetRoleModel>> GetAllRoles()
         {
-            //toDo make change so only user with admin privilidge can get
             List<GetRoleModel> roles = await _context.Roles.Select(x => new GetRoleModel
             {
                 Id = x.Id,
@@ -65,7 +65,7 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetRoleModel> GetRole(Guid id)
         {
-            GetRoleModel role = await _context.Roles.Select(x => new GetRoleModel
+            var role = await _context.Roles.Select(x => new GetRoleModel
             {
                 Id = x.Id,
                 Description = x.Description,
@@ -74,13 +74,17 @@ namespace DataAccessLayer.Repositories
                 UpdatedAt = x.UpdatedAt
             }).AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id);
+            if (role == null)
+            {
+                throw new NotFoundException("Not Found");
+            }
 
             return role;
         }
 
         public async Task<GetRoleModel> GetRoleExhibitor()
         {
-            GetRoleModel role = await _context.Roles
+            var role = await _context.Roles
                 .Select(x => new GetRoleModel
             {
                 Id = x.Id,
@@ -90,6 +94,10 @@ namespace DataAccessLayer.Repositories
                 UpdatedAt = x.UpdatedAt
             }).AsNoTracking()
             .FirstOrDefaultAsync(x => x.Name == "Exhibitor");
+            if (role == null)
+            {
+                throw new NotFoundException("Not Found");
+            }
 
             return role;
         }

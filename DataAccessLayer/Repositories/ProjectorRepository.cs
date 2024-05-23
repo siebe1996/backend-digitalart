@@ -20,6 +20,8 @@ namespace DataAccessLayer.Repositories
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ClaimsPrincipal _user;
 
+        //toDo fix forbiddenexceptions
+
         public ProjectorRepository(Backend_DigitalArtContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
@@ -29,6 +31,11 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetProjectorModel> GetProjector(Guid id)
         {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
             var projector = await _context.Projectors
                 .AsNoTracking()
                 .Where(x => x.Id == id)
@@ -48,13 +55,19 @@ namespace DataAccessLayer.Repositories
                 .FirstOrDefaultAsync();
             if (projector == null)
             {
-                throw new NotFoundException("Place Not Found");
+                throw new NotFoundException("Projector Not Found");
             }
             return projector;
         }
 
         public async Task<List<GetProjectorModel>> GetProjectors()
         {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
             var projectors = await _context.Projectors.Select(x => new GetProjectorModel
             {
                 Id = x.Id,
@@ -75,6 +88,11 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetProjectorModel> PostProjector(PostProjectorModel postProjectorModel)
         {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
             var projector = new Projector
             {
                 Brand = postProjectorModel.Brand,
@@ -91,7 +109,6 @@ namespace DataAccessLayer.Repositories
             var getProjectorModel = new GetProjectorModel
             {
                 Id = projector.Id,
-                ExpositionId = projector.ExpositionId,
                 Brand = projector.Brand,
                 Model = projector.Model,
                 SerialNumber = projector.SerialNumber,
@@ -106,6 +123,11 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetProjectorModel> PutProjector(Guid id, PutProjectorModel putProjectorModel)
         {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
             var projector = await _context.Projectors.FindAsync(id);
             if (projector == null)
             {
@@ -137,21 +159,127 @@ namespace DataAccessLayer.Repositories
             return getProjectorModel;
         }
 
+        public async Task<List<GetProjectorModel>> GetAvailableProjectorsByDates(DateTime startDate, DateTime endDate)
+        {
+            bool hasAccess = _user.IsInRole("Exhibitor");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+            var unavailableProjectorIds = _context.RentalAgreements
+            .Where(res => res.StartDate < endDate && res.EndDate > startDate)
+            .Select(res => res.ProjectorId)
+            .Distinct();
+
+            var availableProjectors = await _context.Projectors
+            .Where(p => !unavailableProjectorIds.Contains(p.Id) && p.Available) // Filters out projectors that are unavailable and checks the Available flag
+            .Select(x => new GetProjectorModel
+            {
+                Id = x.Id,
+                ExpositionId = x.ExpositionId,
+                Brand = x.Brand,
+                Model = x.Model,
+                SerialNumber = x.SerialNumber,
+                Damages = x.Damages,
+                Remarks = x.Remarks,
+                Available = x.Available,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+            })
+            .AsNoTracking()
+            .ToListAsync();
+
+            return availableProjectors;
+        }
+
+        public async Task<List<Guid>> GetReservedProjectors()
+        {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            var unavailableProjectorIds = await _context.RentalAgreements
+            .Where(res => res.StartDate <= DateTime.UtcNow && DateTime.UtcNow <= res.EndDate)
+            .Select(res => res.ProjectorId)
+            .Distinct()
+            .ToListAsync();
+
+            return unavailableProjectorIds;
+        }
+
+        public async Task<List<GetProjectorModel>> GetAvailableProjectorsByDatesWithCurrent(Guid rentalagreementId, DateTime startDate, DateTime endDate)
+        {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            var currentRentalAgreement = await _context.RentalAgreements
+            .Include(ra => ra.Projector)
+            .FirstOrDefaultAsync(ra => ra.Id == rentalagreementId);
+
+            if (currentRentalAgreement == null)
+            {
+                throw new NotFoundException("Rental Agreement not found.");
+            }
+
+            List<Guid> unavailableProjectorIds = _context.RentalAgreements
+            .Where(res => res.StartDate < endDate && res.EndDate > startDate)
+            .Select(res => res.ProjectorId)
+            .Distinct()
+            .ToList();
+
+            if (currentRentalAgreement.StartDate < endDate && currentRentalAgreement.EndDate > startDate)
+            {
+                unavailableProjectorIds.Remove(currentRentalAgreement.ProjectorId);
+            }
+
+            var availableProjectors = await _context.Projectors
+            .Where(p => !unavailableProjectorIds.Contains(p.Id) && p.Available) // Filters out projectors that are unavailable and checks the Available flag
+            .Select(x => new GetProjectorModel
+            {
+                Id = x.Id,
+                ExpositionId = x.ExpositionId,
+                Brand = x.Brand,
+                Model = x.Model,
+                SerialNumber = x.SerialNumber,
+                Damages = x.Damages,
+                Remarks = x.Remarks,
+                Available = x.Available,
+                CreatedAt = x.CreatedAt,
+                UpdatedAt = x.UpdatedAt,
+            })
+            .AsNoTracking()
+            .ToListAsync();
+
+            return availableProjectors;
+        }
+
         public async Task<GetProjectorModel> PatchProjector(Guid id, PatchProjectorModel patchProjectorModel)
         {
+            var currentDateTime = DateTime.UtcNow;
+
+            var unavailableProjectorIds = await _context.RentalAgreements
+            .Where(res => res.StartDate <= currentDateTime && currentDateTime <= res.EndDate)
+            .Select(res => res.ProjectorId)
+            .Distinct()
+            .ToListAsync();
+
+            if (unavailableProjectorIds.Contains(id))
+            {
+                throw new ForbiddenException("Projector is currently reserved and cannot be updated.");
+            }
+
             var projector = await _context.Projectors.FindAsync(id);
             if (projector == null)
             {
                 throw new NotFoundException("Projector Not Found");
             }
 
-            projector.ExpositionId = patchProjectorModel.ExpositionId ?? projector.ExpositionId;
-            projector.Brand = patchProjectorModel.Brand ?? projector.Brand;
-            projector.Model = patchProjectorModel.Model ?? projector.Model;
-            projector.SerialNumber = patchProjectorModel.SerialNumber ?? projector.SerialNumber;
-            projector.Damages = patchProjectorModel.Damages ?? projector.Damages;
-            projector.Remarks = patchProjectorModel.Remarks ?? projector.Remarks;
-            projector.Available = patchProjectorModel.Available ?? projector.Available;
+            projector.Available = patchProjectorModel.Available;
 
             _context.Projectors.Update(projector);
             await _context.SaveChangesAsync();
@@ -171,5 +299,6 @@ namespace DataAccessLayer.Repositories
             };
             return getProjectorModel;
         }
+
     }
 }

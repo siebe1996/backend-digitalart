@@ -12,8 +12,5 @@ namespace Models.Users
         //public string? ImageData { get; set; }
         [Required]
         public string Password { get; set; }
-
-        [Required]
-        public Guid Role {  get; set; }
     }
 }

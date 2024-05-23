@@ -11,6 +11,9 @@ namespace DataAccessLayer.Repositories.Interfaces
     {
         Task<List<GetProjectorModel>> GetProjectors();
         Task<GetProjectorModel> GetProjector(Guid id);
+        Task<List<Guid>> GetReservedProjectors();
+        Task<List<GetProjectorModel>> GetAvailableProjectorsByDates(DateTime startDate, DateTime endDate);
+        Task<List<GetProjectorModel>> GetAvailableProjectorsByDatesWithCurrent(Guid rentalagreementId, DateTime startDate, DateTime endDate);
         Task<GetProjectorModel> PostProjector(PostProjectorModel postProjectorModel);
         Task<GetProjectorModel> PutProjector(Guid id, PutProjectorModel putProjectorModel);
         Task<GetProjectorModel> PatchProjector(Guid id, PatchProjectorModel patchProjectorModel);

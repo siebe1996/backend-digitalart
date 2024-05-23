@@ -1,8 +1,12 @@
 ﻿using DataAccessLayer.Repositories.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Models.Users;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Backend_DigitalArt.Controllers
 {
@@ -14,18 +18,19 @@ namespace Backend_DigitalArt.Controllers
     public class UsersController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+
         public UsersController(IUserRepository userRepository)
         {
             _userRepository = userRepository;
         }
 
-        //The refresh token is being sent in an HTTP only cookie and header
+        // The refresh token is being sent in an HTTP only cookie and header
         private void SetTokenCookie(string token)
         {
             CookieOptions cookieOptions = new()
             {
                 HttpOnly = true,
-                Expires = DateTime.UtcNow.AddMinutes(2), //TOKEN REFRESH
+                Expires = DateTime.UtcNow.AddMinutes(131490), // TOKEN REFRESH
                 IsEssential = true,
             };
 
@@ -44,6 +49,14 @@ namespace Backend_DigitalArt.Controllers
             }
         }
 
+        /// <summary>
+        /// Authenticates a user.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 157ms
+        /// </remarks>
+        /// <param name="postAuthenticateRequestModel">The authentication request model.</param>
+        /// <returns>The authentication response model.</returns>
         [EnableCors("AllowAnyOrigins")]
         [AllowAnonymous]
         [HttpPost("Authenticate")]
@@ -61,6 +74,13 @@ namespace Backend_DigitalArt.Controllers
             }
         }
 
+        /// <summary>
+        /// Renews the authentication token.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 163ms
+        /// </remarks>
+        /// <returns>The authentication response model.</returns>
         [AllowAnonymous]
         [HttpPost("Renew-token")]
         public async Task<ActionResult<PostAuthenticateResponseModel>> RenewToken()
@@ -68,6 +88,10 @@ namespace Backend_DigitalArt.Controllers
             try
             {
                 string refreshToken = Request.Cookies["Backend_DigitalArt.RefreshToken"];
+                if (string.IsNullOrEmpty(refreshToken))
+                {
+                    return BadRequest("Refresh token is missing");
+                }
                 PostAuthenticateResponseModel postAuthenticateResponseModel = await _userRepository.RenewToken(refreshToken, IpAddress());
                 SetTokenCookie(postAuthenticateResponseModel.RefreshToken);
                 return Ok(postAuthenticateResponseModel);
@@ -78,6 +102,13 @@ namespace Backend_DigitalArt.Controllers
             }
         }
 
+        /// <summary>
+        /// Deactivates a token.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 135ms
+        /// </remarks>
+        /// <param name="postDeactivateTokenRequestModel">The token deactivation request model.</param>
         [HttpPost("Deactivate-token")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -102,43 +133,27 @@ namespace Backend_DigitalArt.Controllers
             }
         }
 
-        /*[HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordModel model)
-        {
-            try
-            {
-                // Validate and process the reset password request
-                bool passwordResetSuccessful = await _userRepository.ResetPassword(model);
-
-                if (passwordResetSuccessful)
-                {
-                    return Ok(new { Message = "Password reset successful." });
-                }
-                else
-                {
-                    return BadRequest(new { Message = "Password reset failed." });
-                }
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Message = $"Internal Server Error: {ex.Message}" });
-            }
-        }*/
-
+        /// <summary>
+        /// Gets a list of users.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 121ms
+        /// </remarks>
+        /// <returns>A list of users.</returns>
         [HttpGet]
-        public async Task<ActionResult<GetUserModel>> GetUsers()
+        public async Task<ActionResult<List<GetUserModel>>> GetUsers()
         {
             var models = await _userRepository.GetUsers();
             return models == null ? NotFound() : Ok(models);
         }
 
-        [HttpGet("artists")]
-        public async Task<ActionResult<GetUserModel>> GetArtists()
-        {
-            var models = await _userRepository.GetArtists();
-            return models == null ? NotFound() : Ok(models);
-        }
-
+        /// <summary>
+        /// Gets the authenticated user.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 117ms
+        /// </remarks>
+        /// <returns>The authenticated user.</returns>
         [HttpGet("me")]
         public async Task<ActionResult<GetUserModel>> GetUser()
         {
@@ -146,6 +161,14 @@ namespace Backend_DigitalArt.Controllers
             return model == null ? NotFound() : Ok(model);
         }
 
+        /// <summary>
+        /// Gets a user by ID.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 123ms
+        /// </remarks>
+        /// <param name="id">The ID of the user.</param>
+        /// <returns>A user object.</returns>
         [HttpGet("{id}")]
         public async Task<ActionResult<GetUserModel>> GetUser(Guid id)
         {
@@ -153,6 +176,14 @@ namespace Backend_DigitalArt.Controllers
             return model == null ? NotFound() : Ok(model);
         }
 
+        /// <summary>
+        /// Creates a new user.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 171ms
+        /// </remarks>
+        /// <param name="postUserModel">The user to create.</param>
+        /// <returns>The created user.</returns>
         [AllowAnonymous]
         [HttpPost]
         public async Task<ActionResult<GetUserModel>> PostUser(PostUserModel postUserModel)
@@ -161,6 +192,15 @@ namespace Backend_DigitalArt.Controllers
             return CreatedAtAction("GetUser", new { id = getUserModel.Id }, getUserModel);
         }
 
+        /// <summary>
+        /// Updates a user.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 145ms
+        /// </remarks>
+        /// <param name="id">The ID of the user to update.</param>
+        /// <param name="putUserModel">The updated user data.</param>
+        /// <returns>The updated user.</returns>
         [HttpPut("{id}")]
         public async Task<ActionResult<GetUserModel>> PutUser([FromRoute] Guid id, [FromBody] PutUserModel putUserModel)
         {

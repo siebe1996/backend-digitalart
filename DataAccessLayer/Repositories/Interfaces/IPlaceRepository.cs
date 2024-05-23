@@ -11,6 +11,8 @@ namespace DataAccessLayer.Repositories.Interfaces
     {
         Task<List<GetPlaceModel>> GetPlaces();
         Task<List<GetPlaceModel>> GetPlacesMine();
+        Task<List<GetPlaceModel>> GetPlacesExhibitor(Guid rentalagreementId);
+        Task<List<GetPlaceModel>> GetPlacesWithActiveExpositions();
         Task<GetPlaceModel> GetPlace(Guid id);
         Task<GetPlaceModel> PostPlace(PostPlaceModel postPlaceModel);
         Task<GetPlaceModel> PutPlace(Guid id, PutPlaceModel putPlaceModel);

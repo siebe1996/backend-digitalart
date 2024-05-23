@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.Places;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Backend_DigitalArt.Controllers
 {
@@ -19,41 +21,43 @@ namespace Backend_DigitalArt.Controllers
             _placeRepository = placeRepository;
         }
 
+        /// <summary>
+        /// Gets a list of places.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 126ms
+        /// </remarks>
+        /// <returns>A list of places.</returns>
         [HttpGet]
-        public async Task<ActionResult<GetPlaceModel>> GetPlaces()
+        public async Task<ActionResult<List<GetPlaceModel>>> GetPlaces()
         {
             var models = await _placeRepository.GetPlaces();
             return models == null ? NotFound() : Ok(models);
         }
 
-        [HttpGet("Mine")]
-        public async Task<ActionResult<GetPlaceModel>> GetPlacesMine()
+        /// <summary>
+        /// Gets a list of places with active expositions.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 132ms
+        /// </remarks>
+        /// <returns>A list of places with active expositions.</returns>
+        [HttpGet("Expositions/Active")]
+        public async Task<ActionResult<List<GetPlaceModel>>> GetPlacesWithActiveExpositions()
         {
-            var models = await _placeRepository.GetPlacesMine();
+            var models = await _placeRepository.GetPlacesWithActiveExpositions();
             return models == null ? NotFound() : Ok(models);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<GetPlaceModel>> GetPlace(Guid Id)
-        {
-            var model = await _placeRepository.GetPlace(Id);
-            return model == null ? NotFound() : Ok(model);
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<GetPlaceModel>> PostPlace(PostPlaceModel postPlaceModel)
-        {
-            var model = await _placeRepository.PostPlace(postPlaceModel);
-            return CreatedAtAction("GetPlace", new { id = model.Id }, model);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<ActionResult<GetPlaceModel>> PutPlace([FromRoute] Guid id, [FromBody] PutPlaceModel putPlaceModel)
-        {
-            var model = await _placeRepository.PutPlace(id, putPlaceModel);
-            return model == null ? NotFound() : Ok(model);
-        }
-
+        /// <summary>
+        /// Partially updates a place.
+        /// </summary>
+        /// <remarks>
+        /// Average Response Time: 143ms
+        /// </remarks>
+        /// <param name="id">The ID of the place to update.</param>
+        /// <param name="patchPlaceModel">The updated place data.</param>
+        /// <returns>The updated place.</returns>
         [HttpPatch("{id}")]
         public async Task<ActionResult<GetPlaceModel>> PatchPlace([FromRoute] Guid id, [FromBody] PatchPlaceModel patchPlaceModel)
         {

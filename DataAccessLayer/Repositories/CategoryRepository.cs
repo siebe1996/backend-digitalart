@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Models.Artpieces;
 using Models.Categories;
+using Models.Places;
 using Models.Roles;
 using System;
 using System.Collections.Generic;
@@ -21,6 +22,8 @@ namespace DataAccessLayer.Repositories
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ClaimsPrincipal _user;
 
+        //toDo fix forbiddenexceptions
+
         public CategoryRepository(Backend_DigitalArtContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
@@ -30,6 +33,12 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetCategoryModel> GetCategory(Guid id)
         {
+            bool hasAccessAdmin = _user.IsInRole("Admin");
+            if (!hasAccessAdmin)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
             var category = await _context.Categories
                 .AsNoTracking()
                 .Where(x => x.Id == id)
@@ -66,6 +75,12 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetCategoryModel> PostCategory(PostCategoryModel postCategoryModel)
         {
+            bool hasAccessAdmin = _user.IsInRole("Admin");
+            if (!hasAccessAdmin)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
             var category = new Category
             {
                 Name = postCategoryModel.Name,
@@ -84,6 +99,37 @@ namespace DataAccessLayer.Repositories
                 UpdatedAt = category.UpdatedAt,
             };
             return getCategoryModel;
+        }
+
+        public async Task<GetCategoryModel> PutCategory(Guid id, PutCategoryModel putModel)
+        {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            var category = await _context.Categories.FindAsync(id);
+            if (category == null)
+            {
+                throw new NotFoundException("Category Not Found");
+            }
+
+            category.Name = putModel.Name;
+            category.Description = putModel.Description;
+
+            _context.Categories.Update(category);
+            await _context.SaveChangesAsync();
+
+            var getModel = new GetCategoryModel
+            {
+                Id = category.Id,
+                Name = category.Name,
+                Description = category.Description,
+                CreatedAt = category.CreatedAt,
+                UpdatedAt = category.UpdatedAt,
+            };
+            return getModel;
         }
     }
 }

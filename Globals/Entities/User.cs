@@ -21,10 +21,6 @@ namespace Globals.Entities
         [StringLength(50, MinimumLength = 2)]
         public string LastName { get; set; }
 
-        /*[Required]
-        [EnumDataType(typeof(Gender))]
-        public Gender Gender { get; set; }*/
-
         [Required]
         public string Country { get; set; }
 
@@ -51,13 +47,6 @@ namespace Globals.Entities
         [Required]
         [DataType(DataType.DateTime)]
         public DateTime DateOfBirth { get; set; }
-
-        /*[Required]
-        public double Score { get; set; }
-
-        public string? StripeAccountId { get; set; }
-
-        public string? StripeCostumerId { get; set; }*/
 
         [Required]
         public DateTime CreatedAt { get; set; }

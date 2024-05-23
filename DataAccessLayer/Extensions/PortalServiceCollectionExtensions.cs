@@ -23,20 +23,23 @@ namespace DataAccessLayer.Extensions
             services.AddScoped<ILikeRepository, LikeRepository>();
             services.AddScoped<IPlaceRepository, PlaceRepository>();
             services.AddScoped<IProjectorRepository, ProjectorRepository>();
+            services.AddScoped<IRentalAgreementRepository, RentalAgreementRepository>();
+            services.AddScoped<IExpositionRepository, ExpositionRepository>();
+            services.AddScoped<IArtistRepository, ArtistRepository>();
+            services.AddScoped<IExhibitorRepository, ExhibitorRepository>();
+
 
             //services.AddMvc().AddNewtonsoftJson();
-
-            /*services.AddCors(options =>
+            services.AddCors(options =>
             {
                 options.AddPolicy("AllowSpecificOrigins", builder =>
                 {
-                    builder.WithOrigins("http://localhost:19006/", "http://another-example.com")
+                    builder.WithOrigins("http://localhost:8081", "http://localhost", "https://localhost:8081", "http://localhost:8082", "https://localhost:8082")
+                           .AllowAnyHeader()
                            .AllowAnyMethod()
-                           .AllowAnyHeader();
+                           .AllowCredentials();
                 });
-            });*/
-            services.AddCors(options =>
-            {
+
                 options.AddPolicy("AllowAnyOrigins", builder =>
                 {
                     builder.AllowAnyOrigin()
@@ -44,6 +47,15 @@ namespace DataAccessLayer.Extensions
                            .AllowAnyHeader();
                 });
             });
+            /*services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAnyOrigins", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
+                });
+            });*/
 
             //services.AddScoped<IAppSettings, AppSettings>();
 

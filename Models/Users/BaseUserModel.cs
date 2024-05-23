@@ -10,6 +10,7 @@ namespace Models.Users
 {
     public class BaseUserModel
     {
+
         [Required]
         [StringLength(50, MinimumLength = 2)]
         public string FirstName { get; set; }
@@ -27,24 +28,9 @@ namespace Models.Users
         [EmailAddress]
         public string Email { get; set; }
 
-        public string? Description { get; set; }
-
         public byte[]? ImageData { get; set; }
 
         public string? MimeTypeImageData { get; set; }
-
-        /*[Required]
-        [StringLength(50, MinimumLength = 2)]
-        public string UserName { get; set; }*/
-
-        /*[Required]
-        [EnumDataType(typeof(Gender))]
-        public Gender Gender { get; set; }*/
-
-        /*[Required]
-        [DataType(DataType.PhoneNumber)]
-        [Phone]
-        public string PhoneNumber { get; set;}*/
 
         [Required]
         public string Country {  get; set; }

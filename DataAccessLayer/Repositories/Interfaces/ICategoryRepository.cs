@@ -12,5 +12,6 @@ namespace DataAccessLayer.Repositories.Interfaces
         Task<List<GetCategoryModel>> GetCategories();
         Task<GetCategoryModel> GetCategory(Guid id);
         Task<GetCategoryModel> PostCategory(PostCategoryModel postCategoryModel);
+        Task<GetCategoryModel> PutCategory(Guid id, PutCategoryModel putModel);
     }
 }

@@ -11,10 +11,11 @@ namespace DataAccessLayer.Repositories.Interfaces
     {
         Task<GetArtpieceModel> GetArtpiece(Guid id);
         Task<List<GetArtpieceModel>> GetArtpieces();
+        Task<List<GetArtpieceModel>> GetArtpiecesExposition(Guid expositionId);
         Task<List<GetArtpieceModel>> GetArtpiecesUnratedByCategoryIds(List<Guid> categoryIds);
-        Task<List<GetArtpieceModel>> GetArtpiecesUnrated();
-        Task<List<GetArtpieceModel>> GetArtpiecesRatedLikedByArtistNames(string artistNames);
-        Task<List<GetArtpieceModel>> GetArtpiecesRatedLiked();
+        Task<List<GetArtpieceExpandedModel>> GetArtpiecesUnrated();
+        Task<List<GetArtpieceExpandedModel>> GetArtpiecesRatedLikedByArtistNames(string artistNames);
+        Task<List<GetArtpieceExpandedModel>> GetArtpiecesRatedLiked();
         Task<GetArtpieceModel> PostArtpiece(PostArtpieceModel postArtpieceModel);
     }
 }

@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Models.Artists;
 using Models.Users;
 using Serilog;
 
@@ -114,7 +115,7 @@ namespace DataAccessLayer.Repositories
             {
                 Issuer = "Backend_DigitalArt Web API",
                 Subject = new ClaimsIdentity(claims.ToArray()),
-                Expires = DateTime.UtcNow.AddSeconds(600), //TOKEN JWT change for experation time
+                Expires = DateTime.UtcNow.AddSeconds(5260800), //TOKEN JWT change for experation time
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
             SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
@@ -129,7 +130,7 @@ namespace DataAccessLayer.Repositories
             return new RefreshToken
             {
                 Token = Convert.ToBase64String(randomBytes),
-                Expires = DateTime.UtcNow.AddMinutes(2), //TOKEN REFRESH
+                Expires = DateTime.UtcNow.AddMinutes(131490), //TOKEN REFRESH
                 Created = DateTime.UtcNow,
                 CreatedByIp = ipAddress,
             };
@@ -273,6 +274,8 @@ namespace DataAccessLayer.Repositories
             await _userManager.UpdateAsync(user);
         }
 
+
+        //toDo check if work with roles
         public async Task<List<GetUserModel>> GetUsers()
         {
             List<GetUserModel> users = await _context.Users.Select(x => new GetUserModel
@@ -284,10 +287,6 @@ namespace DataAccessLayer.Repositories
                 Email = x.Email,
                 ImageData = x.ImageData,
                 MimeTypeImageData = x.MimeTypeImageData,
-                //UserName = x.UserName,
-                //Score = x.Score,
-                //Gender = x.Gender,
-                //PhoneNumber = x.PhoneNumber,
                 Country = x.Country,
                 Province = x.Province,
                 City = x.City,
@@ -302,123 +301,83 @@ namespace DataAccessLayer.Repositories
             return users;
         }
 
-        public async Task<List<GetUserModel>> GetArtists()
-        {
-            // Query the Artists table directly
-            List<GetUserModel> artists = await _context.Artists.Select(artist => new GetUserModel
-            {
-                Id = artist.Id,
-                FirstName = artist.FirstName,
-                LastName = artist.LastName,
-                DateOfBirth = artist.DateOfBirth,
-                Email = artist.Email,
-                ImageData = artist.ImageData,
-                MimeTypeImageData = artist.MimeTypeImageData,
-                Description = artist.Description,
-                Country = artist.Country,
-                Province = artist.Province,
-                City = artist.City,
-                PostalCode = artist.PostalCode,
-                Street = artist.Street,
-                Address = artist.Address,
-                CreatedAt = artist.CreatedAt,
-                UpdatedAt = artist.UpdatedAt
-            }).AsNoTracking()
-            .ToListAsync();
-
-            return artists;
-        }
-
-
         public async Task<GetUserModel> GetUser(Guid id)
         {
-            GetUserModel user = await _context.Users.Select(x => new GetUserModel
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null)
             {
-                Id = x.Id,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                DateOfBirth = x.DateOfBirth,
-                Email = x.Email,
-                ImageData = x.ImageData,
-                MimeTypeImageData = x.MimeTypeImageData,
-                //UserName = x.UserName,
-                //Score = x.Score,
-                //Gender = x.Gender,
-                //PhoneNumber = x.PhoneNumber,
-                Country = x.Country,
-                Province = x.Province,
-                City = x.City,
-                PostalCode = x.PostalCode,
-                Street = x.Street,
-                Address = x.Address,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt
-            }).AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == id);
+                throw new NotFoundException("Not Found");
+            }
+            var roleNames = await _userManager.GetRolesAsync(user);
 
-            return user;
+            return new GetUserModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                DateOfBirth = user.DateOfBirth,
+                Email = user.Email,
+                ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
+                Country = user.Country,
+                Province = user.Province,
+                City = user.City,
+                PostalCode = user.PostalCode,
+                Street = user.Street,
+                Address = user.Address,
+                Roles = roleNames,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
         }
+
 
         public async Task<GetUserModel> GetUser()
         {
             //need to get id
-            Guid userId = new Guid(_user.Identity.Name);
-            GetUserModel user = await _context.Users.Select(x => new GetUserModel
+            bool hasAccess = _user.IsInRole("User");
+            if (hasAccess)
             {
-                Id = x.Id,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                DateOfBirth = x.DateOfBirth,
-                Email = x.Email,
-                ImageData = x.ImageData,
-                //UserName = x.UserName,
-                //Score = x.Score,
-                //Gender = x.Gender,
-                //PhoneNumber = x.PhoneNumber,
-                Country = x.Country,
-                Province = x.Province,
-                City = x.City,
-                PostalCode = x.PostalCode,
-                Street = x.Street,
-                Address = x.Address,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt
-            }).AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Id == userId);
-
-            var artist = await _context.Artists
-                .Where(a => a.Id == userId)
-                .Select(a => new
+                Guid userId = new Guid(_user.Identity.Name);
+                var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
+                if (user == null)
                 {
-                    Description = a.Description
-                })
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+                    throw new NotFoundException("Not Found");
+                }
+                var roleNames = await _userManager.GetRolesAsync(user);
 
-            if (artist != null)
-            {
-                user.Description = artist.Description;
+                GetUserModel userModel = new GetUserModel
+                {
+                    Id = user.Id,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    DateOfBirth = user.DateOfBirth,
+                    Email = user.Email,
+                    ImageData = user.ImageData,
+                    Country = user.Country,
+                    Province = user.Province,
+                    City = user.City,
+                    PostalCode = user.PostalCode,
+                    Street = user.Street,
+                    Address = user.Address,
+                    Roles = roleNames,
+                    CreatedAt = user.CreatedAt,
+                    UpdatedAt = user.UpdatedAt
+                };
+
+                return userModel;
             }
-
-            return user;
+            else{
+                throw new ForbiddenException("Not allowed");
+            }
         }
 
+
+        //toDo change this so it doesnt need user role
         public async Task<GetUserModel> PostUser(PostUserModel postUserModel, string ipAddress)
         {
-            //toDo make sure u cant add admin
-            var role = await _context.Roles.FindAsync(postUserModel.Role);
-            if (role == null)
-            {
-                throw new ArgumentException($"Role with ID '{postUserModel.Role}' does not exist.");
-            }
 
-            User user = role.Name switch
-            {
-                "Artist" => new Artist { Description = postUserModel.Description },
-                "Exhibitor" => new Exhibitor(),
-                "User" => new User(),
-                _ => throw new ArgumentException("Provided role name does not match any known user type"),
-            };
+            User user = new User();
 
             user.FirstName = postUserModel.FirstName;
             user.LastName = postUserModel.LastName;
@@ -440,16 +399,16 @@ namespace DataAccessLayer.Repositories
                 throw new Exception($"User creation failed: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
             }
 
-            var roleResult = await _userManager.AddToRoleAsync(user, role.Name);
+            var roleResult = await _userManager.AddToRoleAsync(user, "User");
             if (!roleResult.Succeeded)
             {
                 // Handle failure: possibly throw an exception or return an error response
-                throw new Exception($"Failed to add user to role {role.Name}: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+                throw new Exception($"Failed to add user to role User: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
             }
 
             
             await _context.SaveChangesAsync();
-            Guid id = user.Id;
+            var roleNames = await _userManager.GetRolesAsync(user);
             return new GetUserModel
             {
                 Id = user.Id,
@@ -465,12 +424,11 @@ namespace DataAccessLayer.Repositories
                 PostalCode = user.PostalCode,
                 Street = user.Street,
                 Address = user.Address,
+                Roles = roleNames,
                 CreatedAt = user.CreatedAt,
                 UpdatedAt = user.UpdatedAt,
             };
         }
-
-
 
         public async Task<GetUserModel> PutUser(Guid id, PutUserModel putUserModel)
         {
@@ -524,5 +482,181 @@ namespace DataAccessLayer.Repositories
             
             return usermodel;
         }
+
+        public async Task<List<GetUserModel>> GetAdmins()
+        {
+            bool hasAccessAdmin = _user.IsInRole("Admin");
+            if (!hasAccessAdmin)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+
+            var adminRoleId = await _roleManager.Roles.Where(r => r.Name == "Admin").Select(r => r.Id).FirstOrDefaultAsync();
+
+            var adminUsers = await _context.Users
+            .Where(u => _context.UserRoles
+            .Any(ur => ur.UserId == u.Id && ur.RoleId == adminRoleId))
+            .Select(u => new GetUserModel
+            {
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                DateOfBirth = u.DateOfBirth,
+                Email = u.Email,
+                ImageData = u.ImageData,
+                MimeTypeImageData = u.MimeTypeImageData,
+                Country = u.Country,
+                Province = u.Province,
+                City = u.City,
+                PostalCode = u.PostalCode,
+                Street = u.Street,
+                Address = u.Address,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt
+            })
+            .AsNoTracking()
+            .ToListAsync();
+
+            return adminUsers;
+        }
+
+        public async Task<GetUserModel> GetAdmin(Guid id)
+        {
+            bool hasAccessAdmin = _user.IsInRole("Admin");
+            if (!hasAccessAdmin)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+            if (user == null)
+            {
+                throw new NotFoundException("Not Found");
+            }
+            var roleNames = await _userManager.GetRolesAsync(user);
+
+            return new GetUserModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                DateOfBirth = user.DateOfBirth,
+                Email = user.Email,
+                ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
+                Country = user.Country,
+                Province = user.Province,
+                City = user.City,
+                PostalCode = user.PostalCode,
+                Street = user.Street,
+                Address = user.Address,
+                Roles = roleNames,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+        }
+
+        public async Task<GetUserModel> GetAdmin()
+        {
+            bool hasAccessAdmin = _user.IsInRole("Admin");
+            if (!hasAccessAdmin)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            Guid userId = new Guid(_user.Identity.Name);
+            var user = await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
+            if (user == null)
+            {
+                throw new NotFoundException("Not Found");
+            }
+            var roleNames = await _userManager.GetRolesAsync(user);
+
+            GetUserModel userModel = new GetUserModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                DateOfBirth = user.DateOfBirth,
+                Email = user.Email,
+                ImageData = user.ImageData,
+                Country = user.Country,
+                Province = user.Province,
+                City = user.City,
+                PostalCode = user.PostalCode,
+                Street = user.Street,
+                Address = user.Address,
+                Roles = roleNames,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt
+            };
+
+            return userModel;
+        }
+
+
+        public async Task<GetUserModel> PostAdmin(PostUserModel postUserModel, string ipAddress)
+        {
+            bool hasAccessAdmin = _user.IsInRole("Admin");
+            if (!hasAccessAdmin)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            User user = new User();
+
+            user.FirstName = postUserModel.FirstName;
+            user.LastName = postUserModel.LastName;
+            user.DateOfBirth = postUserModel.DateOfBirth;
+            user.Email = postUserModel.Email;
+            user.ImageData = postUserModel.ImageData;
+            user.MimeTypeImageData = postUserModel.MimeTypeImageData;
+            user.UserName = postUserModel.Email;
+            user.Country = postUserModel.Country;
+            user.Province = postUserModel.Province;
+            user.City = postUserModel.City;
+            user.PostalCode = postUserModel.PostalCode;
+            user.Street = postUserModel.Street;
+            user.Address = postUserModel.Address;
+
+            var createResult = await _userManager.CreateAsync(user, postUserModel.Password);
+            if (!createResult.Succeeded)
+            {
+                throw new Exception($"User creation failed: {string.Join(", ", createResult.Errors.Select(e => e.Description))}");
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "Admin");
+            if (!roleResult.Succeeded)
+            {
+                // Handle failure: possibly throw an exception or return an error response
+                throw new Exception($"Failed to add user to role Admin: {string.Join(", ", roleResult.Errors.Select(e => e.Description))}");
+            }
+
+
+            await _context.SaveChangesAsync();
+            var roleNames = await _userManager.GetRolesAsync(user);
+            return new GetUserModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                DateOfBirth = user.DateOfBirth,
+                Email = user.Email,
+                ImageData = user.ImageData,
+                MimeTypeImageData = user.MimeTypeImageData,
+                Country = user.Country,
+                Province = user.Province,
+                City = user.City,
+                PostalCode = user.PostalCode,
+                Street = user.Street,
+                Address = user.Address,
+                Roles = roleNames,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt,
+            };
+        }
+
+
     }
 }

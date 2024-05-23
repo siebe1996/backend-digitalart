@@ -32,8 +32,15 @@ namespace DataAccessLayer.Repositories
             _user = _httpContextAccessor.HttpContext.User;
         }
 
+        //toDo fix forbiddenexceptions
+
         public async Task<GetPlaceModel> GetPlace(Guid id)
         {
+            bool hasAccess = _user.IsInRole("Exhibitor");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
             var place = await _context.Places
                 .AsNoTracking()
                 .Where(x => x.Id == id)
@@ -84,8 +91,43 @@ namespace DataAccessLayer.Repositories
             return places;
         }
 
+        public async Task<List<GetPlaceModel>> GetPlacesWithActiveExpositions()
+        {
+            List<GetPlaceModel> places = await _context.Places
+                .Where(p => p.RentalAgreements
+                    .Any(ra => ra.Projector.Exposition != null && ra.Projector.Exposition.Active))
+                .Select(x => new GetPlaceModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Description = x.Description,
+                    Country = x.Country,
+                    Province = x.Province,
+                    City = x.City,
+                    PostalCode = x.PostalCode,
+                    Street = x.Street,
+                    Address = x.Address,
+                    Latitude = x.Coordinates.Y,
+                    Longitude = x.Coordinates.X,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                })
+                .Distinct()
+                .AsNoTracking()
+                .ToListAsync();
+
+            return places;
+        }
+
+
+
         public async Task<List<GetPlaceModel>> GetPlacesMine()
         {
+            bool hasAccess = _user.IsInRole("Exhibitor");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
             Guid userId = new Guid(_user.Identity.Name);
 
             List<GetPlaceModel> places = await _context.Places
@@ -111,8 +153,56 @@ namespace DataAccessLayer.Repositories
             return places;
         }
 
+        public async Task<List<GetPlaceModel>> GetPlacesExhibitor(Guid rentalagreementId)
+        {
+            bool hasAccess = _user.IsInRole("Admin");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
+            var exhibitorId = await _context.RentalAgreements
+            .Where(ra => ra.Id == rentalagreementId)
+            .Select(
+                ra => ra.Place.ExhibitorPlaces.Select(ep => ep.ExhibitorId).FirstOrDefault()
+            ).SingleOrDefaultAsync();
+
+            if (exhibitorId == default)
+            {
+                throw new NotFoundException("Exhibitor not found for the given Rental Agreement.");
+            }
+
+            List<GetPlaceModel> places = await _context.Places
+                .Where(x => x.ExhibitorPlaces.Any(ep => ep.ExhibitorId == exhibitorId))
+                .Select(x => new GetPlaceModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    Description = x.Description,
+                    Country = x.Country,
+                    Province = x.Province,
+                    City = x.City,
+                    PostalCode = x.PostalCode,
+                    Street = x.Street,
+                    Address = x.Address,
+                    Latitude = x.Coordinates.Y,
+                    Longitude = x.Coordinates.X,
+                    CreatedAt = x.CreatedAt,
+                    UpdatedAt = x.UpdatedAt,
+                }).AsNoTracking()
+            .ToListAsync();
+
+            return places;
+        }
+
         public async Task<GetPlaceModel> PostPlace(PostPlaceModel postPlaceModel)
         {
+            bool hasAccess = _user.IsInRole("Exhibitor");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+            Guid userId = new Guid(_user.Identity.Name);
             var place = new Place
             {
                 Name = postPlaceModel.Name,
@@ -127,6 +217,15 @@ namespace DataAccessLayer.Repositories
             };
 
             _context.Places.Add(place);
+            await _context.SaveChangesAsync();
+
+            var exhibitorPlace = new ExhibitorPlace
+            {
+                ExhibitorId = userId,
+                PlaceId = place.Id
+            };
+
+            _context.ExhibitorPlaces.Add(exhibitorPlace);
             await _context.SaveChangesAsync();
 
             var getPlaceModel = new GetPlaceModel
@@ -150,6 +249,12 @@ namespace DataAccessLayer.Repositories
 
         public async Task<GetPlaceModel> PutPlace(Guid id, PutPlaceModel putPlaceModel)
         {
+            bool hasAccess = _user.IsInRole("Exhibitor");
+            if (!hasAccess)
+            {
+                throw new ForbiddenException("Not Allowed");
+            }
+
             var place = await _context.Places.FindAsync(id);
             if (place == null)
             {

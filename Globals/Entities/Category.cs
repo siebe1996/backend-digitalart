@@ -26,5 +26,6 @@ namespace Globals.Entities
         public DateTime UpdatedAt { get; set; }
 
         public virtual ICollection<ArtpieceCategory> ArtpieceCategories { get; set; }
+        public virtual ICollection<ExpositionCategory> ExpositionCategories { get; set; }
     }
 }

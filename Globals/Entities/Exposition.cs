@@ -14,6 +14,12 @@ namespace Globals.Entities
         public Guid Id { get; set; }
 
         [Required]
+        public string Name { get; set; }
+
+        [Required]
+        public bool Active { get; set; }
+
+        [Required]
         public DateTime CreatedAt { get; set; }
 
         [Required]
@@ -21,5 +27,6 @@ namespace Globals.Entities
 
         public virtual ICollection<Projector> Projectors { get; set; }
         public virtual ICollection<ExpositionArtpiece> ExpositionArtpieces { get; set; }
+        public virtual ICollection<ExpositionCategory> ExpositionCategories { get; set; }
     }
 }

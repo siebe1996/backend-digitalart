@@ -125,8 +125,15 @@ namespace DataAccessLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<bool>("Active")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -149,6 +156,21 @@ namespace DataAccessLayer.Migrations
                     b.HasIndex("ArtpieceId");
 
                     b.ToTable("ExpositionArtpieces");
+                });
+
+            modelBuilder.Entity("Globals.Entities.ExpositionCategory", b =>
+                {
+                    b.Property<Guid>("ExpositionId")
+                        .HasColumnType("char(36)");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("char(36)");
+
+                    b.HasKey("ExpositionId", "CategoryId");
+
+                    b.HasIndex("CategoryId");
+
+                    b.ToTable("ExpositionCategories");
                 });
 
             modelBuilder.Entity("Globals.Entities.Like", b =>
@@ -234,11 +256,32 @@ namespace DataAccessLayer.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("char(36)");
 
+                    b.Property<bool>("Available")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Brand")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<Guid>("ExpositionId")
+                    b.Property<string>("Damages")
+                        .HasColumnType("longtext");
+
+                    b.Property<Guid?>("ExpositionId")
                         .HasColumnType("char(36)");
+
+                    b.Property<string>("Model")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -298,11 +341,17 @@ namespace DataAccessLayer.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<Guid>("PlaceId")
                         .HasColumnType("char(36)");
 
                     b.Property<Guid>("ProjectorId")
                         .HasColumnType("char(36)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
@@ -662,6 +711,25 @@ namespace DataAccessLayer.Migrations
                     b.Navigation("Exposition");
                 });
 
+            modelBuilder.Entity("Globals.Entities.ExpositionCategory", b =>
+                {
+                    b.HasOne("Globals.Entities.Category", "Category")
+                        .WithMany("ExpositionCategories")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Globals.Entities.Exposition", "Exposition")
+                        .WithMany("ExpositionCategories")
+                        .HasForeignKey("ExpositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Exposition");
+                });
+
             modelBuilder.Entity("Globals.Entities.Like", b =>
                 {
                     b.HasOne("Globals.Entities.Artpiece", "Artpiece")
@@ -685,9 +753,7 @@ namespace DataAccessLayer.Migrations
                 {
                     b.HasOne("Globals.Entities.Exposition", "Exposition")
                         .WithMany("Projectors")
-                        .HasForeignKey("ExpositionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ExpositionId");
 
                     b.Navigation("Exposition");
                 });
@@ -807,11 +873,15 @@ namespace DataAccessLayer.Migrations
             modelBuilder.Entity("Globals.Entities.Category", b =>
                 {
                     b.Navigation("ArtpieceCategories");
+
+                    b.Navigation("ExpositionCategories");
                 });
 
             modelBuilder.Entity("Globals.Entities.Exposition", b =>
                 {
                     b.Navigation("ExpositionArtpieces");
+
+                    b.Navigation("ExpositionCategories");
 
                     b.Navigation("Projectors");
                 });

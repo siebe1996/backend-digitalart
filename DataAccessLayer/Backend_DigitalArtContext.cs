@@ -69,6 +69,7 @@ namespace DataAccessLayer
         public DbSet<ExhibitorPlace> ExhibitorPlaces { get; set; }
         public DbSet<Exposition> Expositions{ get; set; }
         public DbSet<ExpositionArtpiece> ExpositionArtpieces { get; set; }
+        public DbSet<ExpositionCategory> ExpositionCategories { get; set; }
         public DbSet<Place> Places {  get; set; }
         public DbSet<Projector> Projectors { get; set; }
         public DbSet<RentalAgreement> RentalAgreements { get; set; }
@@ -192,6 +193,11 @@ namespace DataAccessLayer
                 .WithOne(x => x.Category)
                 .HasForeignKey(x => x.CategoryId)
                 .IsRequired();
+
+                entity.HasMany(x => x.ExpositionCategories)
+                .WithOne(x => x.Category)
+                .HasForeignKey(x => x.CategoryId)
+                .IsRequired();
             });
 
             builder.Entity<Exhibitor>(entity =>
@@ -232,6 +238,11 @@ namespace DataAccessLayer
                 .WithOne(x => x.Exposition)
                 .HasForeignKey(x => x.ExpositionId)
                 .IsRequired();
+
+                entity.HasMany(x => x.ExpositionCategories)
+                .WithOne(x => x.Exposition)
+                .HasForeignKey(x => x.ExpositionId)
+                .IsRequired();
             });
 
             builder.Entity<ExpositionArtpiece>(entity =>
@@ -247,6 +258,24 @@ namespace DataAccessLayer
                 entity.HasOne(x => x.Artpiece)
                 .WithMany(x => x.ExpositionArtpieces)
                 .HasForeignKey(x => x.ArtpieceId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            builder.Entity<ExpositionCategory>(entity =>
+            {
+                entity.HasKey(x => new { x.ExpositionId, x.CategoryId });
+
+                entity.HasOne(x => x.Exposition)
+                .WithMany(x => x.ExpositionCategories)
+                .HasForeignKey(x => x.ExpositionId)
+                .IsRequired()
+                .OnDelete(DeleteBehavior.Restrict);
+
+
+                entity.HasOne(x => x.Category)
+                .WithMany(x => x.ExpositionCategories)
+                .HasForeignKey(x => x.CategoryId)
                 .IsRequired()
                 .OnDelete(DeleteBehavior.Restrict);
             });
@@ -280,7 +309,7 @@ namespace DataAccessLayer
                 entity.HasOne(x => x.Exposition)
                 .WithMany(x => x.Projectors)
                 .HasForeignKey(x => x.ExpositionId)
-                .IsRequired();
+                .IsRequired(false);
             });
 
             builder.Entity<RentalAgreement>(entity =>
